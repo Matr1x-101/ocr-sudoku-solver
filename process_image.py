@@ -106,7 +106,7 @@ def extract_digit(cell_image, debug=False):
     # Return the extracted digit
     return extracted_digit
 
-image = cv2.imread("sample-image-from-online.png")
+image = cv2.imread("sudoku.jpg")
 image = imutils.resize(image, width=600)
 
 # Call the function
