@@ -52,4 +52,4 @@ print('Test accuracy:', test_acc)
 
 # Save model
 model.save("keras_minst_model.h5")
-print("Model saved")
+print("Model saved.")
