@@ -110,7 +110,7 @@ image = cv2.imread("sample-image-from-online.png")
 image = imutils.resize(image, width=600)
 
 # Call the function
-puzzle, warpedResult = locate_puzzle(image, True)
+puzzle, warpedResult = locate_puzzle(image)
 
 # Initialise the board with numpy
 board = np.zeros((9, 9), dtype='int')
@@ -130,7 +130,7 @@ for i in range(9):
         print(startY, endY)
         cell = warpedResult[startY:endY, startX:endX]
         print(cell)
-        digit = extract_digit(cell, True)
+        digit = extract_digit(cell)
 
         if digit is not None:
             pre_nn_digit = cv2.resize(digit, (28, 28))
