@@ -1,0 +1,17 @@
+--2024-09-29 16:22:32--  https://i.sstatic.net/DLMIA.png
+Loaded CA certificate '/etc/ssl/certs/ca-certificates.crt'
+Resolving i.sstatic.net (i.sstatic.net)... 104.18.41.33, 172.64.146.223
+Connecting to i.sstatic.net (i.sstatic.net)|104.18.41.33|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 272090 (266K) [image/png]
+Saving to: ‘DLMIA.png.1’
+
+     0K .......... .......... .......... .......... .......... 18% 3.19M 0s
+    50K .......... .......... .......... .......... .......... 37% 6.62M 0s
+   100K .......... .......... .......... .......... .......... 56% 3.55M 0s
+   150K .......... .......... .......... .......... .......... 75% 9.83M 0s
+   200K .......... .......... .......... .......... .......... 94% 11.7M 0s
+   250K .......... .....                                      100% 15.0M=0.05s
+
+2024-09-29 16:22:32 (5.57 MB/s) - ‘DLMIA.png.1’ saved [272090/272090]
+

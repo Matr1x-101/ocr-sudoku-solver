@@ -51,5 +51,5 @@ test_loss, test_acc = model.evaluate(test_images, test_labels)
 print('Test accuracy:', test_acc)
 
 # Save model
-model.save("keras_minst_model.h5")
+model.save("keras_mnist_model.h5")
 print("Model saved.")
