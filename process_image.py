@@ -7,7 +7,7 @@ from skimage.segmentation import clear_border
 
 model = keras.models.load_model("keras_mnist_model.h5")
 
-def locate_puzzle(image, debug=False):
+def locate_puzzle(image, debug=True):
     # Convert to grayscale and blur the image
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (7, 7), 3)
@@ -131,18 +131,18 @@ for i in range(9):
         cell = warpedResult[startY:endY, startX:endX]
         print(cell)
         digit = extract_digit(cell)
-
         if digit is not None:
             pre_nn_digit = cv2.resize(digit, (28, 28))
+            cv2.imshow("Digit", pre_nn_digit)
             pre_nn_digit = pre_nn_digit.astype("float") / 255.0
             pre_nn_digit = keras.preprocessing.image.img_to_array(pre_nn_digit)
             pre_nn_digit = np.expand_dims(pre_nn_digit, axis=0)
 
             predictedDigit = model.predict(pre_nn_digit).argmax(axis=1)[0]
-            board[i, j] = predictedDigit
+            board[j, i] = predictedDigit
             rowArray.append(None)
         else:
             rowArray.append((startX, startY, endX, endY))
     coords.append(rowArray)
 
-print(board.tolist(), 9, 9)
+print(board.tolist())
