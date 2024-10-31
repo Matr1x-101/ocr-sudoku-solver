@@ -22,22 +22,15 @@ class Cmds(Enum):
     REGEN = auto()
     CLEAR = auto()
 
-
 def GenButtonMap():
-    return {Cmds.IMPORT: 'Import Board',
-              Cmds.RESTART: 'Restart',
-              Cmds.SOLVE: 'Solve',
-              Cmds.FILLSINGLE: 'Fill Single Candidates',
-              Cmds.UPDATE: 'Update Candidates',
-              Cmds.HIDSINGLE: 'Highlight Hidden Singles',
-              Cmds.NAKEDPAIR: 'Highlight Naked Pairs',
-              Cmds.POINTPAIR: 'Highlight Pointing Pairs',
-              Cmds.BOXLINE: 'Highlight Box-Line Pairs',
-              Cmds.BOXTRIPLE: 'Highlight Box Triples',
-              Cmds.XWING: 'Highlight X-Wings',
-              Cmds.REGEN: 'Re-generate Candidates',
-              Cmds.CLEAR: 'Clear Highlights'}
-
+    return {
+        Cmds.IMPORT: 'Import',
+        Cmds.RESTART: 'Restart',
+        Cmds.SOLVE: 'Solve',
+        Cmds.FILLSINGLE: 'Fill Singles',
+        Cmds.UPDATE: 'Update',
+        Cmds.CLEAR: 'Clear'
+    }
 
 class PyQtSudokuView(QMainWindow):
     def __init__(self):
@@ -45,8 +38,8 @@ class PyQtSudokuView(QMainWindow):
 
         button_map = GenButtonMap()
 
-        # Maps to map commands, keys and functions
-        self.key_table = {k: Cmds.NUM for k in range(QtCore.Qt.Key_0, QtCore.Qt.Key_9+1)}
+        # Maps for commands and functions
+        self.key_table = {k: Cmds.NUM for k in range(QtCore.Qt.Key_0, QtCore.Qt.Key_9 + 1)}
         self.key_table.update({QtCore.Qt.Key_Backspace: Cmds.DEL})
         self.func_map = {}
 
@@ -55,9 +48,9 @@ class PyQtSudokuView(QMainWindow):
         # Variables (UI)
         self.cells = self.CreateBoard(self, board_layout)
 
-        # Create the msg text UI element to pass messages to user
-        self.msgText = QLabel('Num Solutions: ?')
-        self.msgText.setStyleSheet("border: 1px solid black;")
+        # Create message display
+        self.msgText = QLabel('Solutions: ?')
+        self.msgText.setStyleSheet("border: 1px solid black; font-size: 10px;")
         side_ui_layout.addWidget(self.msgText)
 
         # Create UI button elements
@@ -65,64 +58,88 @@ class PyQtSudokuView(QMainWindow):
             title = button_map[cmd]
             self.AddButton(side_ui_layout, title, lambda state, x=cmd: self.ExecuteCmd(x))
 
-        # Add the number pad to the side UI layout
+        # Add dropdown for secondary actions
+        self.AddDropdown(side_ui_layout)
+
+        # Add number pad
         self.AddNumberPad(side_ui_layout)
 
     def SetupWindow(self):
-        """ Setup Window - calls to QMainWindow methods (not overridden) """
-        self.setGeometry(500, 30, 1200, 900)
+        """ Sets up the main window layout. """
+        self.setGeometry(100, 100, 320, 480)  # Adjusted for 320x480 screen
         self.setWindowTitle("Simple Sudoku")
         self.setStyleSheet("background-color: grey;")
 
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
 
-        # Create UI layouts
         outer_layout = QGridLayout()
         board_layout = QGridLayout()
         side_ui_layout = QVBoxLayout()
         central_widget.setLayout(outer_layout)
 
-        # Create layouts for sudoku board and side UI buttons on 12 x 9 UI grid
-        # Sudoku board 9x9 on the UI grid, side UI 3 columns wide and 4 high (3rd to 6th row)
-        outer_layout.addLayout(board_layout, 0, 0, 9, 9)
-        outer_layout.addLayout(side_ui_layout, 2, 9, 4, 3)
+        # Configure layout for a compact view
+        outer_layout.addLayout(board_layout, 0, 0, 8, 8)
+        outer_layout.addLayout(side_ui_layout, 0, 8, 4, 2)
 
         return board_layout, side_ui_layout
 
     @staticmethod
     def AddButton(layout, title, func):
         button = QPushButton(title)
+        button.setStyleSheet("font-size: 10px; padding: 2px; margin: 1px;")
         button.clicked.connect(func)
         layout.addWidget(button)
         return button
 
+    def AddDropdown(self, layout):
+        """ Adds a dropdown for less-used functions """
+        dropdown = QComboBox()
+        dropdown.setStyleSheet("font-size: 10px; padding: 2px;")
+        dropdown.addItem("More Actions...")
+        dropdown.addItem("Highlight Hidden Singles")
+        dropdown.addItem("Highlight Naked Pairs")
+        dropdown.addItem("Highlight Pointing Pairs")
+        dropdown.addItem("Highlight Box-Line Pairs")
+        dropdown.addItem("Highlight Box Triples")
+        dropdown.addItem("Highlight X-Wings")
+        dropdown.currentIndexChanged.connect(self.DropdownSelected)
+        layout.addWidget(dropdown)
+
+    def DropdownSelected(self, index):
+        """ Executes a command based on dropdown selection """
+        dropdown_cmds = [
+            None, Cmds.HIDSINGLE, Cmds.NAKEDPAIR, Cmds.POINTPAIR,
+            Cmds.BOXLINE, Cmds.BOXTRIPLE, Cmds.XWING
+        ]
+        if index > 0:
+            self.ExecuteCmd(dropdown_cmds[index])
+
     def AddNumberPad(self, layout):
-        """ Creates and adds a number pad for touchscreen input """
+        """ Adds a number pad for touchscreen input """
         num_pad_layout = QGridLayout()
         num_pad_buttons = []
 
-        # Create buttons for 1-9
         for i in range(1, 10):
             button = QPushButton(str(i))
+            button.setStyleSheet("font-size: 10px; padding: 2px; margin: 1px;")
             button.clicked.connect(lambda state, x=i: self.NumPadClick(x))
             num_pad_buttons.append(button)
 
-        # Place the buttons in a 3x3 grid
         for i in range(9):
             num_pad_layout.addWidget(num_pad_buttons[i], i // 3, i % 3)
 
-        # Add a delete button for backspace
         delete_button = QPushButton("Del")
+        delete_button.setStyleSheet("font-size: 10px; padding: 2px; margin: 1px;")
         delete_button.clicked.connect(lambda: self.ExecuteCmd(Cmds.DEL))
         num_pad_layout.addWidget(delete_button, 3, 1)
 
-        # Add the number pad layout to the side layout
         layout.addLayout(num_pad_layout)
 
     def NumPadClick(self, num):
-        """ Handle number pad button clicks. Simulates a key press event for the number clicked. """
+        """ Handles number pad clicks """
         self.ExecuteCmd(Cmds.NUM, num)
+
     @staticmethod
     def CreateBlock(parent, layout, bi, bj):
         block = Block(parent)
@@ -135,19 +152,21 @@ class PyQtSudokuView(QMainWindow):
         parent_box = boxes[bi][bj]
         cell = Cell(parent_box, i, j)
         cell.ConnectCelltoWindow(click_func)
-        parent_box.AddCell(cell, i - 3*bi, j - 3*bj)
+        parent_box.AddCell(cell, i - 3 * bi, j - 3 * bj)
         return cell
 
     def CreateBoard(self, parent, layout):
         """ Creates board display with initial board values and candidates """
-        # Create boxes for each 9x9 block
         blocks = [[self.CreateBlock(parent, layout, bi, bj) for bj in range(3)] for bi in range(3)]
         return [[self.CreateCell(i, j, blocks, self.CellClicked) for j in range(9)] for i in range(9)]
 
-    ####################################################################################################################
+    def CellClicked(self, cell):
+        """ Handles cell clicks """
+        print(f"Cell at position ({cell.row}, {cell.column}) clicked.")
+        self.ExecuteCmd(Cmds.CELLCLICK, cell)
 
     def ExecuteCmd(self, cmd, data=None):
-        """ Takes a command enum code and calls the corresponding function """
+        """ Executes a command based on `func_map` """
         if cmd in self.func_map:
             if data is not None:
                 self.func_map[cmd](data)
@@ -155,16 +174,12 @@ class PyQtSudokuView(QMainWindow):
                 self.func_map[cmd]()
 
     def Connect(self, func_map):
-        """ Allows other class (eg model or controller etc) to specify what function to call for each command """
+        """ Connects functions to commands """
         self.func_map = func_map
 
-    ####################################################################################################################
-    # Event handling - pass onto controller
-
     def keyPressEvent(self, event):
-        """ Handles key presses."""
+        """ Handles key presses """
         key = event.key()
-
         if key in self.key_table:
             cmd = self.key_table[key]
             if QtCore.Qt.Key_0 <= key <= QtCore.Qt.Key_9:
@@ -174,74 +189,57 @@ class PyQtSudokuView(QMainWindow):
                 self.ExecuteCmd(cmd)
 
     def mouseReleaseEvent(self, QMouseEvent):
-        """ If mouse clicked NOT on child widget such as a cell """
-        print('(' + str(QMouseEvent.x()) + ', ' + str(QMouseEvent.y()) + ') \
-              (' + str(self.width()) + ',' + str(self.height()) + ')')
-
+        """ Handles mouse release events """
+        print(f'({QMouseEvent.x()}, {QMouseEvent.y()}) - ({self.width()}, {self.height()})')
         self.ExecuteCmd(Cmds.MOUSE)
 
-    def CellClicked(self, cell):#, cand):
-        """ Handler function for a cell being clicked.  Pass onto Controller to handle """
-
-        self.ExecuteCmd(Cmds.CELLCLICK, cell)
-
-    ####################################################################################################################
-
     def ResetAllCellsValid(self):
-        """ Remove indication of invalid cells """
-        for i in range(0, 9):
-            for j in range(0, 9):
+        """ Resets the validation of all cells """
+        for i in range(9):
+            for j in range(9):
                 self.cells[i][j].SetValidity(is_invalid=False)
 
     def ShowInvalidCells(self, duplicate_cells):
-        """ Highlight cells that are a duplicate of that number in row, column
-        or block.  List of cell coord passed in as list of tuple (i,j) pairs. """
+        """ Highlights invalid cells """
         self.ResetAllCellsValid()
         for cell in duplicate_cells:
             self.cells[cell[0]][cell[1]].SetValidity(is_invalid=True)
 
-    ####################################################################################################################
-
     def UpdateAllCells(self, board, initial=False):
-        """ Update all cells """
-        for i in range(0, 9):
-            for j in range(0, 9):
+        """ Updates the values of all cells """
+        for i in range(9):
+            for j in range(9):
                 self.cells[i][j].UpdateValue(board[i][j], initial)
 
     def UpdateAllCandidates(self, cand_board):
-        """ Update all candidates in unfilled cells """
-        for i in range(0, 9):
-            for j in range(0, 9):
+        """ Updates the candidates in unfilled cells """
+        for i in range(9):
+            for j in range(9):
                 self.cells[i][j].UpdateCandidates(cand_board[i][j])
 
     def UpdateChangedCells(self, changed_cell_data):
-        """ Update only changed cells """
+        """ Updates only changed cells """
         for cell_info in changed_cell_data:
             i, j, n = cell_info
             self.cells[i][j].UpdateValue(n)
 
-    ####################################################################################################################
-    # Update the sudoku board display
-
     def ClearHighlights(self):
-        """ Remove all highlight from candidates """
-        for i in range(0, 9):
-            for j in range(0, 9):
+        """ Clears all highlights """
+        for i in range(9):
+            for j in range(9):
                 self.cells[i][j].ClearHilites()
 
     def HighlightRemovals(self, highlight_list):
-        """ Highlight candidates that can be removed based on list rCands """
+        """ Highlights candidates for removal """
         for highlight_info in highlight_list:
-            i, j = highlight_info.i,  highlight_info.j
+            i, j = highlight_info.i, highlight_info.j
             self.cells[i][j].HiliteCandidates(highlight_info.candidates, colour='red')
 
     def HighlightValues(self, highlight_list):
-        """ Highlight candidates """
+        """ Highlights specific candidate values """
         for highlight_info in highlight_list:
-            i, j = highlight_info.i,  highlight_info.j
+            i, j = highlight_info.i, highlight_info.j
             self.cells[i][j].HiliteCandidates(highlight_info.candidates)
-
-    ####################################################################################################################
 
     def SetNumSolutions(self, num_solns=None):
         """ Sets the message area text """
@@ -250,10 +248,4 @@ class PyQtSudokuView(QMainWindow):
         else:
             self.msgText.setStyleSheet("border: 1px solid black; color: red;")
 
-        if num_solns is None:
-            self.msgText.setText('Num Solutions: ' + '?')
-        elif num_solns < 0:
-            self.msgText.setText('Num Solutions: ' + 'Board Invalid')
-        else:
-            self.msgText.setText('Num Solutions: ' + str(num_solns))
-
+        self.msgText.setText('Solutions: ' + ('?' if num_solns is None else 'Invalid' if num_solns < 0 else str(num_solns)))
