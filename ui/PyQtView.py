@@ -1,8 +1,7 @@
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QMainWindow, QLabel, QGridLayout, QVBoxLayout, QWidget, QPushButton, QComboBox
+from PyQt5.QtWidgets import QMainWindow, QLabel, QGridLayout, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QComboBox
 from UIElements import Cell, Block
 from enum import Enum, auto
-
 
 class Cmds(Enum):
     NUM = auto()
@@ -66,6 +65,9 @@ class PyQtSudokuView(QMainWindow):
             title = button_map[cmd]
             self.AddButton(side_ui_layout, title, lambda state, x=cmd: self.ExecuteCmd(x))
 
+        # Add the number pad to the side UI layout
+        self.AddNumberPad(side_ui_layout)
+
     def SetupWindow(self):
         """ Setup Window - calls to QMainWindow methods (not overridden) """
         self.setGeometry(500, 30, 1200, 900)
@@ -95,6 +97,32 @@ class PyQtSudokuView(QMainWindow):
         layout.addWidget(button)
         return button
 
+    def AddNumberPad(self, layout):
+        """ Creates and adds a number pad for touchscreen input """
+        num_pad_layout = QGridLayout()
+        num_pad_buttons = []
+
+        # Create buttons for 1-9
+        for i in range(1, 10):
+            button = QPushButton(str(i))
+            button.clicked.connect(lambda state, x=i: self.NumPadClick(x))
+            num_pad_buttons.append(button)
+
+        # Place the buttons in a 3x3 grid
+        for i in range(9):
+            num_pad_layout.addWidget(num_pad_buttons[i], i // 3, i % 3)
+
+        # Add a delete button for backspace
+        delete_button = QPushButton("Del")
+        delete_button.clicked.connect(lambda: self.ExecuteCmd(Cmds.DEL))
+        num_pad_layout.addWidget(delete_button, 3, 1)
+
+        # Add the number pad layout to the side layout
+        layout.addLayout(num_pad_layout)
+
+    def NumPadClick(self, num):
+        """ Handle number pad button clicks. Simulates a key press event for the number clicked. """
+        self.ExecuteCmd(Cmds.NUM, num)
     @staticmethod
     def CreateBlock(parent, layout, bi, bj):
         block = Block(parent)
