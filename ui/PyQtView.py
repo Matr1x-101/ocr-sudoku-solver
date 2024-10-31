@@ -151,9 +151,12 @@ class PyQtSudokuView(QMainWindow):
         bi, bj = i // 3, j // 3
         parent_box = boxes[bi][bj]
         cell = Cell(parent_box, i, j)
+        cell.row = i  # Add row attribute
+        cell.column = j  # Add column attribute
         cell.ConnectCelltoWindow(click_func)
         parent_box.AddCell(cell, i - 3 * bi, j - 3 * bj)
         return cell
+
 
     def CreateBoard(self, parent, layout):
         """ Creates board display with initial board values and candidates """
@@ -176,7 +179,7 @@ class PyQtSudokuView(QMainWindow):
     def Connect(self, func_map):
         """ Connects functions to commands """
         self.func_map = func_map
-
+    
     def keyPressEvent(self, event):
         """ Handles key presses """
         key = event.key()
