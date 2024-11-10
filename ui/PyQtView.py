@@ -79,7 +79,7 @@ class PyQtSudokuView(QMainWindow):
         central_widget.setLayout(outer_layout)
 
         # Configure layout for a compact view
-        outer_layout.addLayout(board_layout, 0, 0, 8, 8)
+        outer_layout.addLayout(board_layout, 0, 0, 1, 1)
         outer_layout.addLayout(side_ui_layout, 0, 8, 4, 2)
 
         return board_layout, side_ui_layout

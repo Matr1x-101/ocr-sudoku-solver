@@ -187,7 +187,7 @@ class Block(QLabel):
 
         self.gridLayoutBox = QGridLayout()
         self.gridLayoutBox.setContentsMargins(0, 0, 0, 0)
-        self.gridLayoutBox.setSpacing(2)
+        self.gridLayoutBox.setSpacing(0)
         self.setLayout(self.gridLayoutBox)
         self.setFixedSize(80, 80)  # Adjust this size if needed
     def AddCell(self, cell_QLabel, i, j):
