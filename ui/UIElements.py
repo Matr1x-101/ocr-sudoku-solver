@@ -169,6 +169,13 @@ class Cell(QLabel):
             i, j = self.CandCoordFromValue(value)
             cand_widget = self.gridLayoutBox.itemAtPosition(i, j).widget()
             cand_widget.setText(Value2String(value))
+    
+    def RemoveCandidate(self, value):
+        """ Removes candidate value from empty/unknown cell """
+        if self.text() == ' ':
+            i, j = self.CandCoordFromValue(value)
+            cand_widget = self.gridLayoutBox.itemAtPosition(i, j).widget()
+            cand_widget.setText(' ')
 
 
 class Block(QLabel):
