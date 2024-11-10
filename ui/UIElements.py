@@ -50,7 +50,7 @@ class Cell(QLabel):
 
         # Alignment and font adjustments
         self.setAlignment(QtCore.Qt.AlignCenter)
-        self.setFont(QFont("Arial", 18, QFont.Bold))  # Adjust font size for small screens
+        self.setFont(QFont("Arial", 14, QFont.Bold))  # Adjust font size for small screens
 
         # Create a grid layout for displaying candidates
         self.gridLayoutBox = QGridLayout()
