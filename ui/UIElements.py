@@ -185,9 +185,10 @@ class Block(QLabel):
         self.setStyleSheet('background-color: lightgrey;')
 
         self.gridLayoutBox = QGridLayout()
-        self.gridLayoutBox.setContentsMargins(1, 1, 1, 1)
-        self.gridLayoutBox.setSpacing(2)
+        self.gridLayoutBox.setContentsMargins(0, 0, 0, 0)
+        self.gridLayoutBox.setSpacing(1)
         self.setLayout(self.gridLayoutBox)
+        self.setFixedSize(100, 100)
 
     def AddCell(self, cell_QLabel, i, j):
         """ Adds a cell to the block """
