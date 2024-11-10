@@ -49,8 +49,9 @@ class Cell(QLabel):
         self.SetEditStatus(value == 0)
 
         # Alignment and font adjustments
+        self.setFixedSize(24, 24)
         self.setAlignment(QtCore.Qt.AlignCenter)
-        self.setFont(QFont("Arial", 14, QFont.Bold))  # Adjust font size for small screens
+        self.setFont(QFont("Arial", 10, QFont.Bold))  # Adjust font size for small screens
 
         # Create a grid layout for displaying candidates
         self.gridLayoutBox = QGridLayout()
@@ -188,7 +189,7 @@ class Block(QLabel):
         self.gridLayoutBox.setContentsMargins(0, 0, 0, 0)
         self.gridLayoutBox.setSpacing(2)
         self.setLayout(self.gridLayoutBox)
-
+        self.setFixedSize(80, 80)  # Adjust this size if needed
     def AddCell(self, cell_QLabel, i, j):
         """ Adds a cell to the block """
         self.gridLayoutBox.addWidget(cell_QLabel, i, j)
