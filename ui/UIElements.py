@@ -19,7 +19,7 @@ class Candidate(QLabel):
             Candidate[hilite="off"] {background: transparent;}
         """)
         self.SetHilite('off')
-        self.setFont(QFont("Arial", 8))  # Font size optimized for smaller screens
+        self.setFont(QFont("Arial", 6))  # Font size optimized for smaller screens
         self.setAlignment(QtCore.Qt.AlignCenter)
 
     def SetHilite(self, hilite_colour='off'):
@@ -50,12 +50,12 @@ class Cell(QLabel):
 
         # Alignment and font adjustments
         self.setAlignment(QtCore.Qt.AlignCenter)
-        self.setFont(QFont("Arial", 24, QFont.Bold))  # Adjust font size for small screens
+        self.setFont(QFont("Arial", 18, QFont.Bold))  # Adjust font size for small screens
 
         # Create a grid layout for displaying candidates
         self.gridLayoutBox = QGridLayout()
-        self.gridLayoutBox.setContentsMargins(1, 1, 1, 1)
-        self.gridLayoutBox.setSpacing(2)
+        self.gridLayoutBox.setContentsMargins(0, 0, 0, 0)
+        self.gridLayoutBox.setSpacing(1)
         self.setLayout(self.gridLayoutBox)
 
     @staticmethod
@@ -185,8 +185,8 @@ class Block(QLabel):
         self.setStyleSheet('background-color: lightgrey;')
 
         self.gridLayoutBox = QGridLayout()
-        self.gridLayoutBox.setContentsMargins(2, 2, 2, 2)
-        self.gridLayoutBox.setSpacing(4)
+        self.gridLayoutBox.setContentsMargins(1, 1, 1, 1)
+        self.gridLayoutBox.setSpacing(2)
         self.setLayout(self.gridLayoutBox)
 
     def AddCell(self, cell_QLabel, i, j):
