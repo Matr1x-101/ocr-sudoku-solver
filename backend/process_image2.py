@@ -128,18 +128,37 @@ def locate_puzzle(img):
         if mom['m00'] != 0:
             x, y = int(mom['m10'] / mom['m00']), int(mom['m01'] / mom['m00'])
             centroids.append((x, y))
-
+    
     # Sort centroids into a 10x10 grid
     centroids = np.array(centroids, dtype=np.float32).reshape((100, 2))
     c2 = centroids[np.argsort(centroids[:, 1])]
     b = np.vstack([c2[i * 10:(i + 1) * 10][np.argsort(c2[i * 10:(i + 1) * 10, 0])] for i in range(10)])
+    bm = b.reshape((10,10,2))
+    
+    # Make a copy for labeling in order
+    labeled_in_order = res2.copy()
 
+    textcolor = (0, 0, 255)  # Blue for text
+    pointcolor = (255, 0, 0)  # Blue for points
+
+    # Label the centroids with numbers in the output image
+    for index, pt in enumerate(b):
+        cv2.putText(labeled_in_order, str(index), tuple(map(int, pt)), cv2.FONT_HERSHEY_DUPLEX, 0.75, textcolor)
+        cv2.circle(labeled_in_order, tuple(map(int, pt)), 5, pointcolor)
+
+    # Display and save the labeled image
+    winname = "labeled in order"
+    cv2.namedWindow(winname)
+    cv2.imshow(winname, labeled_in_order)
+    cv2.moveWindow(winname, 100, 500)
+    cv2.imwrite("labelled.jpg", labeled_in_order)  # Save the labeled image
+    
     # Step 11: Generate the final output by transforming the puzzle grid
     output = np.zeros((450, 450, 3), np.uint8)
     for i, j in enumerate(b):
         ri, ci = int(i / 10), i % 10
         if ci != 9 and ri != 9:
-            src = centroids[ri:ri + 2, ci:ci + 2].reshape((4, 2))
+            src = bm[ri:ri + 2, ci:ci + 2].reshape((4, 2))
             dst = np.array([[ci * 50, ri * 50], [(ci + 1) * 50 - 1, ri * 50], [ci * 50, (ri + 1) * 50 - 1], [(ci + 1) * 50 - 1, (ri + 1) * 50 - 1]], np.float32)
             retval = cv2.getPerspectiveTransform(src, dst)
             warp = cv2.warpPerspective(res2, retval, (450, 450))
