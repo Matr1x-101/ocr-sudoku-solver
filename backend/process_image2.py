@@ -6,179 +6,155 @@ import keras
 
 from skimage.segmentation import clear_border
 
-img = cv2.imread('sample-image-from-online.png')
+img = cv2.imread('test.jpg')
 model = keras.models.load_model("keras_mnist_model.h5")
 
-def locate_puzzle(img):
-    '''
-    winname="raw image"
-    cv2.namedWindow(winname)
-    cv2.imshow(winname, img)
-    cv2.moveWindow(winname, 100,100)
-    '''
+import cv2
+import numpy as np
 
-    img = cv2.GaussianBlur(img,(5,5),0)
-    '''
-    winname="blurred"
+def locate_puzzle(img):
+    """
+    Locate and extract a puzzle grid from an input image.
+    
+    Parameters:
+    img (numpy.ndarray): Input image in which the puzzle is to be located.
+    
+    Returns:
+    numpy.ndarray: The final transformed image containing the extracted puzzle grid.
+    """
+    
+    # Step 1: Display the raw input image
+    winname = "raw image"
     cv2.namedWindow(winname)
     cv2.imshow(winname, img)
-    cv2.moveWindow(winname, 100,150)
-    '''
-    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    mask = np.zeros((gray.shape),np.uint8)
-    kernel1 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(11,11))
-    '''
-    winname="gray"
+    cv2.moveWindow(winname, 100, 100)
+
+    # Step 2: Apply Gaussian blur to smooth the image and reduce noise
+    img = cv2.GaussianBlur(img, (5, 5), 0)
+    winname = "blurred"
+    cv2.namedWindow(winname)
+    cv2.imshow(winname, img)
+    cv2.moveWindow(winname, 100, 150)
+    
+    # Step 3: Convert the blurred image to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    mask = np.zeros((gray.shape), np.uint8)
+    kernel1 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    winname = "gray"
     cv2.namedWindow(winname)
     cv2.imshow(winname, gray)
-    cv2.moveWindow(winname, 100,200)
-    '''
-    close = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel1)
-    div = np.float32(gray)/(close)
-    res = np.uint8(cv2.normalize(div,div,0,255,cv2.NORM_MINMAX))
-    res2 = cv2.cvtColor(res,cv2.COLOR_GRAY2BGR)
-    '''
-    winname="res2"
+    cv2.moveWindow(winname, 100, 200)
+
+    # Step 4: Enhance the contrast using morphological operations
+    close = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel1)
+    div = np.float32(gray) / close
+    res = np.uint8(cv2.normalize(div, div, 0, 255, cv2.NORM_MINMAX))
+    res2 = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
+    winname = "res2"
     cv2.namedWindow(winname)
     cv2.imshow(winname, res2)
-    cv2.moveWindow(winname, 100,250)
-    '''
-    #find elements
-    thresh = cv2.adaptiveThreshold(res,255,0,1,19,2)
-    contour,hier = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-
+    cv2.moveWindow(winname, 100, 250)
+    
+    # Step 5: Thresholding and contour detection to locate the puzzle area
+    thresh = cv2.adaptiveThreshold(res, 255, 0, 1, 19, 2)
+    contour, hier = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Step 6: Find the largest contour which likely corresponds to the puzzle area
     max_area = 0
     best_cnt = None
     for cnt in contour:
         area = cv2.contourArea(cnt)
-        if area > 1000:
-            if area > max_area:
-                max_area = area
-                best_cnt = cnt
+        if area > 1000 and area > max_area:
+            max_area = area
+            best_cnt = cnt
 
-    cv2.drawContours(mask,[best_cnt],0,255,-1)
-    cv2.drawContours(mask,[best_cnt],0,0,2)
+    # Draw the best contour onto a mask
+    cv2.drawContours(mask, [best_cnt], 0, 255, -1)
+    cv2.drawContours(mask, [best_cnt], 0, 0, 2)
+    res = cv2.bitwise_and(res, mask)
 
-    res = cv2.bitwise_and(res,mask)
-    '''
-    winname="puzzle only"
+    winname = "puzzle only"
     cv2.namedWindow(winname)
     cv2.imshow(winname, res)
-    cv2.moveWindow(winname, 100,300)
-    '''
-    # vertical lines
-    kernelx = cv2.getStructuringElement(cv2.MORPH_RECT,(2,10))
-
-    dx = cv2.Sobel(res,cv2.CV_16S,1,0)
+    cv2.moveWindow(winname, 100, 300)
+    cv2.imwrite("puzzleonly.jpg", res)
+    
+    # Step 7: Detect vertical lines
+    kernelx = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 10))
+    dx = cv2.Sobel(res, cv2.CV_16S, 1, 0)
     dx = cv2.convertScaleAbs(dx)
-    cv2.normalize(dx,dx,0,255,cv2.NORM_MINMAX)
-    ret,close = cv2.threshold(dx,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    close = cv2.morphologyEx(close,cv2.MORPH_DILATE,kernelx,iterations = 1)
+    cv2.normalize(dx, dx, 0, 255, cv2.NORM_MINMAX)
+    _, close = cv2.threshold(dx, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    close = cv2.morphologyEx(close, cv2.MORPH_DILATE, kernelx, iterations=1)
 
-    contour, hier = cv2.findContours(close,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    # Remove small noise contours
+    contour, hier = cv2.findContours(close, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contour:
-        x,y,w,h = cv2.boundingRect(cnt)
-        if h/w > 5:
-            cv2.drawContours(close,[cnt],0,255,-1)
+        x, y, w, h = cv2.boundingRect(cnt)
+        if h / w > 10:
+            cv2.drawContours(close, [cnt], 0, 255, -1)
         else:
-            cv2.drawContours(close,[cnt],0,0,-1)
-    close = cv2.morphologyEx(close,cv2.MORPH_CLOSE,None,iterations = 2)
-    closex = close.copy()
+            cv2.drawContours(close, [cnt], 0, 0, -1)
+    closex = cv2.morphologyEx(close, cv2.MORPH_CLOSE, None, iterations=2)
 
-
-
-    # find horizontal lines
-    kernely = cv2.getStructuringElement(cv2.MORPH_RECT,(10,2))
-    dy = cv2.Sobel(res,cv2.CV_16S,0,2)
+    # Step 8: Detect horizontal lines
+    kernely = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 2))
+    dy = cv2.Sobel(res, cv2.CV_16S, 0, 2)
     dy = cv2.convertScaleAbs(dy)
-    cv2.normalize(dy,dy,0,255,cv2.NORM_MINMAX)
-    ret,close = cv2.threshold(dy,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    close = cv2.morphologyEx(close,cv2.MORPH_DILATE,kernely)
-
-    contour, hier = cv2.findContours(close,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-
+    cv2.normalize(dy, dy, 0, 255, cv2.NORM_MINMAX)
+    _, close = cv2.threshold(dy, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    close = cv2.morphologyEx(close, cv2.MORPH_DILATE, kernely)
+    contour, hier = cv2.findContours(close, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contour:
-        x,y,w,h = cv2.boundingRect(cnt)
-        if w/h > 5:
-            cv2.drawContours(close,[cnt],0,255,-1)
+        x, y, w, h = cv2.boundingRect(cnt)
+        if w / h > 10:
+            cv2.drawContours(close, [cnt], 0, 255, -1)
         else:
-            cv2.drawContours(close,[cnt],0,0,-1)
+            cv2.drawContours(close, [cnt], 0, 0, -1)
+    closey = cv2.morphologyEx(close, cv2.MORPH_DILATE, None, iterations=2)
 
-    close = cv2.morphologyEx(close,cv2.MORPH_DILATE,None,iterations = 2)
-    closey = close.copy()
-
-
-
-
-    # intersection of these two gives dots
-    res = cv2.bitwise_and(closex,closey)
-
-    '''
-    winname="intersections"
+    # Step 9: Find intersections of vertical and horizontal lines
+    res = cv2.bitwise_and(closex, closey)
+    winname = "intersections"
     cv2.namedWindow(winname)
     cv2.imshow(winname, res)
-    cv2.moveWindow(winname, 100,450)
-    '''
+    cv2.moveWindow(winname, 100, 450)
 
-    # text blue
-    textcolor=(0,255,0)
-    # points green
-    pointcolor=(255,0,0)
-
-    # find centroids and sort
-    contour, hier = cv2.findContours(res,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    # Step 10: Extract centroids of detected intersections
+    contour, hier = cv2.findContours(res, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     centroids = []
     for cnt in contour:
         mom = cv2.moments(cnt)
-        (x,y) = int(mom['m10']/mom['m00']), int(mom['m01']/mom['m00'])
-        cv2.circle(img,(x,y),4,(0,255,0),-1)
-        centroids.append((x,y))
+        if mom['m00'] != 0:
+            x, y = int(mom['m10'] / mom['m00']), int(mom['m01'] / mom['m00'])
+            centroids.append((x, y))
 
-    # sorting
-    centroids = np.array(centroids,dtype = np.float32)
-    c = centroids.reshape((100,2))
-    c2 = c[np.argsort(c[:,1])]
+    # Sort centroids into a 10x10 grid
+    centroids = np.array(centroids, dtype=np.float32).reshape((100, 2))
+    c2 = centroids[np.argsort(centroids[:, 1])]
+    b = np.vstack([c2[i * 10:(i + 1) * 10][np.argsort(c2[i * 10:(i + 1) * 10, 0])] for i in range(10)])
 
-    b = np.vstack([c2[i*10:(i+1)*10][np.argsort(c2[i*10:(i+1)*10,0])] for i in range(10)])
-    bm = b.reshape((10,10,2))
+    # Step 11: Generate the final output by transforming the puzzle grid
+    output = np.zeros((450, 450, 3), np.uint8)
+    for i, j in enumerate(b):
+        ri, ci = int(i / 10), i % 10
+        if ci != 9 and ri != 9:
+            src = centroids[ri:ri + 2, ci:ci + 2].reshape((4, 2))
+            dst = np.array([[ci * 50, ri * 50], [(ci + 1) * 50 - 1, ri * 50], [ci * 50, (ri + 1) * 50 - 1], [(ci + 1) * 50 - 1, (ri + 1) * 50 - 1]], np.float32)
+            retval = cv2.getPerspectiveTransform(src, dst)
+            warp = cv2.warpPerspective(res2, retval, (450, 450))
+            output[ri * 50:(ri + 1) * 50 - 1, ci * 50:(ci + 1) * 50 - 1] = warp[ri * 50:(ri + 1) * 50 - 1, ci * 50:(ci + 1) * 50 - 1].copy()
 
-    # make copy
-    labeled_in_order=res2.copy()
-
-    for index, pt in enumerate(b):
-        cv2.putText(labeled_in_order, str(index), tuple(map(int, pt)), cv2.FONT_HERSHEY_DUPLEX, 0.75, textcolor)
-        cv2.circle(labeled_in_order, tuple(map(int, pt)), 5, pointcolor)
-
-    '''
-    winname="labeled in order"
-    cv2.namedWindow(winname)
-    cv2.imshow(winname, labeled_in_order)
-    cv2.moveWindow(winname, 100,500)
-    '''
-
-    # create final
-
-    output = np.zeros((450,450,3),np.uint8)
-    for i,j in enumerate(b):
-        ri = int(i/10) # row index
-        ci = i%10 # column index
-        if ci != 9 and ri!=9:
-            src = bm[ri:ri+2, ci:ci+2 , :].reshape((4,2))
-            dst = np.array( [ [ci*50,ri*50],[(ci+1)*50-1,ri*50],[ci*50,(ri+1)*50-1],[(ci+1)*50-1,(ri+1)*50-1] ], np.float32)
-            retval = cv2.getPerspectiveTransform(src,dst)
-            warp = cv2.warpPerspective(res2,retval,(450,450))
-            output[ri*50:(ri+1)*50-1 , ci*50:(ci+1)*50-1] = warp[ri*50:(ri+1)*50-1 , ci*50:(ci+1)*50-1].copy()
-    '''
-    winname="final"
+    # Step 12: Display and save the final output
+    winname = "final"
     cv2.namedWindow(winname)
     cv2.imshow(winname, output)
-    cv2.moveWindow(winname, 600,100)
-    '''
-    '''
-    cv2.imshow("cropped", output[50:100, 0:50])
+    cv2.moveWindow(winname, 600, 100)
     cv2.waitKey(0)
-    '''
+    cv2.imwrite("output.jpg", output)
+    
     return output
+
 
 def extract_digit(cell_image, debug=False):
     # Convert the image to grayscale (single channel) before applying thresholding
