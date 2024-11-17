@@ -152,23 +152,7 @@ def FillinHiddenSingles_iterative(board, cand_board):
 
 def SolvewBacktrack(board, initial=True):
     """
-    Solve a Sudoku puzzle using a backtracking algorithm with enhancements.
-
-    This function attempts to solve the given Sudoku `board` using backtracking. 
-    It includes optimizations such as simplifying the board by filling in naked and hidden singles 
-    before diving into the recursive backtracking process. This helps to reduce the search space and improves efficiency.
-
-    Args:
-        board (list[list[int]]): A 2D list representing the Sudoku board. 
-                                 Empty cells are represented as 0.
-        initial (bool): A flag indicating whether this is the initial call to the function. 
-                        If True, the board will be preprocessed to fill in singles.
-
-    Returns:
-        tuple: A tuple containing:
-            - num_solns (int): The number of solutions found for the Sudoku puzzle.
-            - soln_board (list[list[int]] or None): A deep copy of the solved Sudoku board if 
-                                                   a solution is found, or `None` if no solution exists.
+    Solve a Sudoku puzzle using a backtracking algorithm.
     """
 
     num_solns = 0
