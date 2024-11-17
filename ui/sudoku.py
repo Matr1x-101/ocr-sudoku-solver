@@ -151,36 +151,64 @@ def FillinHiddenSingles_iterative(board, cand_board):
 
 
 def SolvewBacktrack(board, initial=True):
-    """ Solve the puzzle via the backtracking algorithm """
+    """
+    Solve a Sudoku puzzle using a backtracking algorithm with enhancements.
+
+    This function attempts to solve the given Sudoku `board` using backtracking. 
+    It includes optimizations such as simplifying the board by filling in naked and hidden singles 
+    before diving into the recursive backtracking process. This helps to reduce the search space and improves efficiency.
+
+    Args:
+        board (list[list[int]]): A 2D list representing the Sudoku board. 
+                                 Empty cells are represented as 0.
+        initial (bool): A flag indicating whether this is the initial call to the function. 
+                        If True, the board will be preprocessed to fill in singles.
+
+    Returns:
+        tuple: A tuple containing:
+            - num_solns (int): The number of solutions found for the Sudoku puzzle.
+            - soln_board (list[list[int]] or None): A deep copy of the solved Sudoku board if 
+                                                   a solution is found, or `None` if no solution exists.
+    """
+
     num_solns = 0
     soln_board = None
 
+    # Create a deep copy of the input board to avoid mutating the original
     board_copy = deepcopy(board)
 
-    # First simplify the board by filling in naked and hidden singles
+    # Preprocess the board on the initial call to fill naked and hidden singles
     if initial:
         cand_board = SolveCandidates(board_copy)
         board_copy, cand_board = FillinSingleCandidates_iterative(board_copy, cand_board)
         board_copy, cand_board = FillinHiddenSingles_iterative(board_copy, cand_board)
 
-    #  Do backtrack solving but use the list of candidates in each cell to reduce search depth
-    #  Start by finding the first cell that has no known value, if all cells have values then board solved.
+    # Find the first empty cell in the board
     first_empty_cell = FindFirstEmptyCell(board_copy)
+
+    # If an empty cell is found, attempt to solve by trying all candidate values
     if first_empty_cell is not None:
         i, j = first_empty_cell
         possible_candidates = GetCellCandidateSet(board_copy, i, j)
 
+        # Iterate through all possible candidates for the empty cell
         for candidate in iter(possible_candidates):
-            # Try solution
+            # Assign the candidate value to the cell and recurse
             board_copy[i][j] = candidate
-
             num_solns_loop, soln_board_loop = SolvewBacktrack(board_copy, initial=False)
+
+            # Update the number of solutions found
             num_solns += num_solns_loop
+
+            # Save the solution board if one solution is found
             if num_solns == 1 and soln_board_loop is not None:
                 soln_board = soln_board_loop
 
+            # Reset the cell back to empty before the next candidate
             board_copy[i][j] = 0
 
         return num_solns, soln_board
+
+    # If no empty cells remain, the board is solved
     else:
-        return 1, deepcopy(board_copy)  # Solved!
+        return 1, deepcopy(board_copy)
